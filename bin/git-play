@@ -48,12 +48,12 @@ if _repo != '.':
     subprocess.check_call(["git", "clone", _repo, _workdir])
     os.chdir(_workdir)
     if _not_specified:
-        subprocess.check_call(["git", "checkout", '%s/%s' % (_remote, _branch)])
+        subprocess.check_call(["git", "checkout", _branch])
     logging.info('Cloned.')
 else:
     try:
         if _not_specified:
-            subprocess.check_call(["git", "checkout", '%s/%s' % (_remote, _branch)])
+            subprocess.check_call(["git", "checkout", _branch])
     except:
         logging.fatal('No such repository.')
         exit(1)
@@ -156,6 +156,7 @@ try:
                 # If it is,
                 subprocess.call(['git', 'pull',  _remote, _branch])
                 logging.info('Something has changed. Applying...')
+                print log
                 _conf.teardown()
                 _conf.app_terminate() 
                 _conf = Config(_workdir) 
