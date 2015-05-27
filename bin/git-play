@@ -1,12 +1,11 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 #-*- coding: utf-8 -*-
 '''
-    git-play
-        by Ju-yeong Park <interruptz@gmail.com>
+    git-play2
+        by Goutham <cs14btech11014@iith.ac.in>
 '''
 
 import argparse
-import git
 import logging
 import os
 import re 
@@ -45,28 +44,27 @@ logging.basicConfig(filename=_logfile,filemode='a+',level=logging.DEBUG if _verb
 if _verbose:
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-try:
-    repo = git.Repo.clone_from(_repo, _workdir)
+if _repo != '.':
+    subprocess.check_call(["git", "clone", _repo, _workdir])
+    os.chdir(_workdir)
     if _not_specified:
-        repo.git.checkout('%s/%s' % (_remote, _branch))
+        subprocess.check_call(["git", "checkout", '%s/%s' % (_remote, _branch)])
     logging.info('Cloned.')
-except:
+else:
     try:
-        repo = git.Repo(_workdir)
         if _not_specified:
-            repo.git.checkout('%s/%s' % (_remote, _branch))
+            subprocess.check_call(["git", "checkout", '%s/%s' % (_remote, _branch)])
     except:
         logging.fatal('No such repository.')
         exit(1)
-    repo.git.pull(_remote, _branch)
+    # subprocess.check_call(["git", "pull", '%s %s' % (_remote, _branch)])
     logging.info('Pulled.')
 
-
 # _workdir should be strict.
-_workdir = repo.working_dir
+_workdir = os.path.abspath(".")
 
 logging.info('Git: %s, %s/%s' % (_repo, _remote, _branch))
-logging.info('Working directory: %s' % (_workdir,))
+logging.info('Working directory: %s' % (_workdir))
 
 # Utilities
 class Config(object):
@@ -137,7 +135,7 @@ _conf = Config(_workdir)
 _conf.setup()
 _conf.app_spawn()
 
-print 'Spawned.'
+print('Spawned.')
 try:
     while True:
         time.sleep(1)
@@ -147,13 +145,16 @@ try:
             logging.debug('Pulling from the remote repository...')
             while True:
                 try:
-                    rst = repo.git.pull(_remote, _branch)
+                    subprocess.call(['git', 'fetch', _remote])
+                    log = subprocess.check_output(['git', 'log', '%s..%s/%s' % (_branch, _remote, _branch)])
+                    print "Checked"
                     break
                 except:
                     logging.error('Failed to pull, retry...')
             # See if something is changed.
-            if rst != 'Already up-to-date.':
+            if log:
                 # If it is,
+                subprocess.call(['git', 'pull',  _remote, _branch])
                 logging.info('Something has changed. Applying...')
                 _conf.teardown()
                 _conf.app_terminate() 
